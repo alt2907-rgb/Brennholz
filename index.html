@@ -149,6 +149,160 @@
             color: #555;
             line-height: 1.6;
         }
+
+        .provider-search-section {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+        }
+
+        .provider-search-section h2 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .search-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .search-button:hover {
+            background: #218838;
+        }
+
+        .request-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .request-button {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .request-button:hover {
+            background: #138496;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            margin: 0;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+        }
+
+        .close-button:hover {
+            color: #000;
+        }
+
+        .modal textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        .copy-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+        }
+
+        .copy-button:hover {
+            background: #5568d3;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .radio-group input[type="radio"] {
+            width: auto;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -164,8 +318,18 @@
             
             <div class="grid">
                 <div class="form-group">
-                    <label for="srmAmount">Benötigte Menge (SRM):</label>
-                    <input type="number" id="srmAmount" value="10" min="0" step="0.1">
+                    <label>Benötigte Menge:</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="unitType" value="srm" checked>
+                            SRM (Schüttraummeter)
+                        </label>
+                        <label>
+                            <input type="radio" name="unitType" value="rm">
+                            RM (Raummeter)
+                        </label>
+                    </div>
+                    <input type="number" id="amount" value="10" min="0" step="0.1">
                 </div>
 
                 <div class="form-group">
@@ -209,8 +373,41 @@
             </div>
         </div>
 
+        <div class="provider-search-section">
+            <h2>🔍 Anbietersuche</h2>
+            <div class="grid">
+                <div class="form-group">
+                    <label for="postalCode">Postleitzahl:</label>
+                    <input type="text" id="postalCode" placeholder="z.B. 10115" maxlength="5" pattern="[0-9]{5}">
+                </div>
+                <div class="form-group">
+                    <label for="searchRadius">Umkreis (km):</label>
+                    <input type="number" id="searchRadius" value="25" min="1" step="1">
+                </div>
+            </div>
+            <button class="search-button" onclick="searchProviders()">🔎 Günstige Anbieter in meiner Nähe suchen</button>
+            
+            <div class="request-buttons">
+                <button class="request-button" onclick="openRequestModal('pellets')">📧 Anfrage: Pellets</button>
+                <button class="request-button" onclick="openRequestModal('stammware')">📧 Anfrage: Stammware</button>
+                <button class="request-button" onclick="openRequestModal('ofenfertig')">📧 Anfrage: Ofenfertiges</button>
+            </div>
+        </div>
+
         <div class="results-section" id="results">
             <!-- Results will be inserted here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Modal for Request Generator -->
+    <div id="requestModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Anfrage</h2>
+                <button class="close-button" onclick="closeRequestModal()">&times;</button>
+            </div>
+            <textarea id="requestText" readonly></textarea>
+            <button class="copy-button" onclick="copyRequestText()">📋 Text kopieren</button>
         </div>
     </div>
 
@@ -220,7 +417,7 @@
 
         // Get all input elements
         const inputs = {
-            srmAmount: document.getElementById('srmAmount'),
+            amount: document.getElementById('amount'),
             woodType: document.getElementById('woodType'),
             srmToRmFactor: document.getElementById('srmToRmFactor'),
             priceReadyToBurn: document.getElementById('priceReadyToBurn'),
@@ -229,14 +426,27 @@
             processingCost: document.getElementById('processingCost')
         };
 
+        // Get radio buttons for unit type
+        const unitRadios = document.getElementsByName('unitType');
+
         // Add event listeners to all inputs for live calculation
         Object.values(inputs).forEach(input => {
             input.addEventListener('input', calculate);
         });
 
+        // Add event listeners to radio buttons
+        unitRadios.forEach(radio => {
+            radio.addEventListener('change', calculate);
+        });
+
+        function getSelectedUnit() {
+            const selectedRadio = document.querySelector('input[name="unitType"]:checked');
+            return selectedRadio ? selectedRadio.value : 'srm';
+        }
+
         function calculate() {
             // Get input values
-            const srmAmount = parseFloat(inputs.srmAmount.value) || 0;
+            const amount = parseFloat(inputs.amount.value) || 0;
             const heatingValuePerRM = parseFloat(inputs.woodType.value) || 2100;
             const srmToRmFactor = parseFloat(inputs.srmToRmFactor.value) || 0.7;
             const priceReadyToBurn = parseFloat(inputs.priceReadyToBurn.value) || 0;
@@ -244,8 +454,17 @@
             const pricePellets = parseFloat(inputs.pricePellets.value) || 0;
             const processingCost = parseFloat(inputs.processingCost.value) || 0;
 
-            // Calculate RM from SRM
-            const rmAmount = srmAmount * srmToRmFactor;
+            const selectedUnit = getSelectedUnit();
+            
+            // Calculate SRM and RM amounts based on selected unit
+            let srmAmount, rmAmount;
+            if (selectedUnit === 'srm') {
+                srmAmount = amount;
+                rmAmount = amount * srmToRmFactor;
+            } else {
+                rmAmount = amount;
+                srmAmount = amount / srmToRmFactor;
+            }
 
             // Calculate kWh for wood
             const kWhWood = rmAmount * heatingValuePerRM;
@@ -253,6 +472,7 @@
             // Option 1: Ready-to-burn firewood
             const option1 = {
                 name: 'Brennholz ofenfertig',
+                srm: srmAmount,
                 rm: rmAmount,
                 kWh: kWhWood,
                 totalCost: srmAmount * priceReadyToBurn,
@@ -262,6 +482,7 @@
             // Option 2: Log wood with processing
             const option2 = {
                 name: 'Stammware + Verarbeitung',
+                srm: srmAmount,
                 rm: rmAmount,
                 kWh: kWhWood,
                 totalCost: rmAmount * priceLogWood + processingCost,
@@ -272,6 +493,7 @@
             const pelletsAmount = kWhWood / PELLET_HEATING_VALUE;
             const option3 = {
                 name: 'Pellets',
+                srm: srmAmount,
                 rm: pelletsAmount,
                 kWh: kWhWood,
                 totalCost: pelletsAmount * pricePellets,
@@ -295,11 +517,11 @@
                 <div class="result-card ${cheapest === option1 ? 'cheapest' : ''}">
                     <h3>🪵 ${option1.name}</h3>
                     <div class="result-item">
-                        <span class="result-label">Menge:</span>
-                        <span class="result-value">${srmAmount.toFixed(2)} SRM</span>
+                        <span class="result-label">Menge (SRM):</span>
+                        <span class="result-value">${option1.srm.toFixed(2)} SRM</span>
                     </div>
                     <div class="result-item">
-                        <span class="result-label">RM:</span>
+                        <span class="result-label">Menge (RM):</span>
                         <span class="result-value">${option1.rm.toFixed(2)} RM</span>
                     </div>
                     <div class="result-item">
@@ -320,11 +542,11 @@
                 <div class="result-card ${cheapest === option2 ? 'cheapest' : ''}">
                     <h3>🪓 ${option2.name}</h3>
                     <div class="result-item">
-                        <span class="result-label">Menge:</span>
-                        <span class="result-value">${rmAmount.toFixed(2)} RM</span>
+                        <span class="result-label">Menge (SRM):</span>
+                        <span class="result-value">${option2.srm.toFixed(2)} SRM</span>
                     </div>
                     <div class="result-item">
-                        <span class="result-label">RM:</span>
+                        <span class="result-label">Menge (RM):</span>
                         <span class="result-value">${option2.rm.toFixed(2)} RM</span>
                     </div>
                     <div class="result-item">
@@ -345,8 +567,12 @@
                 <div class="result-card ${cheapest === option3 ? 'cheapest' : ''}">
                     <h3>🌾 ${option3.name}</h3>
                     <div class="result-item">
-                        <span class="result-label">Menge:</span>
+                        <span class="result-label">Menge (Tonnen):</span>
                         <span class="result-value">${pelletsAmount.toFixed(2)} t</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Äquivalent (RM):</span>
+                        <span class="result-value">${option2.rm.toFixed(2)} RM</span>
                     </div>
                     <div class="result-item">
                         <span class="result-label">Heizwert:</span>
@@ -367,6 +593,148 @@
                     ${cheapest === option3 ? '<div class="cheapest-badge">✓ Günstigste Option</div>' : ''}
                 </div>
             `;
+        }
+
+        // Provider search function
+        function searchProviders() {
+            const postalCode = document.getElementById('postalCode').value;
+            const searchRadius = document.getElementById('searchRadius').value;
+
+            // Validate postal code
+            if (!postalCode || postalCode.length !== 5 || !/^\d{5}$/.test(postalCode)) {
+                alert('Bitte geben Sie eine gültige 5-stellige Postleitzahl ein.');
+                return;
+            }
+
+            const searchTerms = [
+                `brennholz kaufen ${postalCode}`,
+                `holzhandel ${postalCode}`,
+                `brennholz ofenfertig ${postalCode}`,
+                `holz stammware ${postalCode}`,
+                `pellets kaufen ${postalCode}`
+            ];
+
+            const kleinanzeigenSearches = [
+                { keyword: 'brennholz', label: 'Brennholz' },
+                { keyword: 'pellets', label: 'Pellets' },
+                { keyword: 'stammholz', label: 'Stammholz' }
+            ];
+
+            let delay = 0;
+
+            // Open Google searches
+            searchTerms.forEach((term, index) => {
+                setTimeout(() => {
+                    const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(term)}`;
+                    window.open(googleUrl, '_blank');
+                }, delay);
+                delay += 500; // 500ms delay between tabs
+            });
+
+            // Open Kleinanzeigen.de searches
+            kleinanzeigenSearches.forEach((search, index) => {
+                setTimeout(() => {
+                    const kleinanzeigenUrl = `https://www.kleinanzeigen.de/s-suchanfrage.html?keywords=${encodeURIComponent(search.keyword)}&locationStr=${postalCode}`;
+                    window.open(kleinanzeigenUrl, '_blank');
+                }, delay);
+                delay += 500; // 500ms delay between tabs
+            });
+        }
+
+        // Request modal functions
+        function openRequestModal(type) {
+            const modal = document.getElementById('requestModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const requestText = document.getElementById('requestText');
+
+            const amount = parseFloat(inputs.amount.value) || 0;
+            const selectedUnit = getSelectedUnit();
+            const srmToRmFactor = parseFloat(inputs.srmToRmFactor.value) || 0.7;
+            
+            let srmAmount, rmAmount;
+            if (selectedUnit === 'srm') {
+                srmAmount = amount;
+                rmAmount = amount * srmToRmFactor;
+            } else {
+                rmAmount = amount;
+                srmAmount = amount / srmToRmFactor;
+            }
+
+            const woodTypeElement = document.getElementById('woodType');
+            const woodTypeName = woodTypeElement.options[woodTypeElement.selectedIndex].text.split('(')[0].trim();
+            const postalCode = document.getElementById('postalCode').value || '[Ihre PLZ]';
+
+            let title = '';
+            let productName = '';
+            let amountText = '';
+
+            if (type === 'pellets') {
+                title = 'Anfrage: Pellets';
+                productName = 'Pellets';
+                const heatingValuePerRM = parseFloat(inputs.woodType.value) || 2100;
+                const kWhWood = rmAmount * heatingValuePerRM;
+                const pelletsAmount = kWhWood / PELLET_HEATING_VALUE;
+                amountText = `${pelletsAmount.toFixed(2)} Tonnen Pellets`;
+            } else if (type === 'stammware') {
+                title = 'Anfrage: Stammware';
+                productName = `Stammware (${woodTypeName})`;
+                amountText = `${rmAmount.toFixed(2)} Raummeter (RM)`;
+            } else if (type === 'ofenfertig') {
+                title = 'Anfrage: Ofenfertiges Brennholz';
+                productName = `Ofenfertiges Brennholz (${woodTypeName})`;
+                amountText = `${srmAmount.toFixed(2)} Schüttraummeter (SRM) bzw. ${rmAmount.toFixed(2)} Raummeter (RM)`;
+            }
+
+            const requestTemplate = `Sehr geehrte Damen und Herren,
+
+ich interessiere mich für den Kauf von ${productName} und möchte Sie um ein Angebot bitten.
+
+Meine Anfrage:
+- Produkt: ${productName}
+- Benötigte Menge: ${amountText}
+- Lieferadresse: PLZ ${postalCode}
+
+Ich bitte Sie um Auskunft zu folgenden Punkten:
+1. Preis pro Einheit
+2. Lieferkosten
+3. Verfügbarkeit und Lieferzeit
+4. Zahlungsbedingungen
+5. Qualität und Feuchtigkeitsgehalt (falls zutreffend)
+
+Ich freue mich auf Ihr Angebot.
+
+Mit freundlichen Grüßen`;
+
+            modalTitle.textContent = title;
+            requestText.value = requestTemplate;
+            modal.style.display = 'block';
+        }
+
+        function closeRequestModal() {
+            const modal = document.getElementById('requestModal');
+            modal.style.display = 'none';
+        }
+
+        function copyRequestText() {
+            const requestText = document.getElementById('requestText');
+            requestText.select();
+            document.execCommand('copy');
+            
+            // Visual feedback
+            const copyButton = event.target;
+            const originalText = copyButton.textContent;
+            copyButton.textContent = '✓ Kopiert!';
+            setTimeout(() => {
+                copyButton.textContent = originalText;
+            }, 2000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('requestModal');
+            if (event.target === modal) {
+                closeRequestModal();
+            }
         }
 
         // Initial calculation
