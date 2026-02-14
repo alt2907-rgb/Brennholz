@@ -256,7 +256,7 @@
                 rm: rmAmount,
                 kWh: kWhWood,
                 totalCost: srmAmount * priceReadyToBurn,
-                costPerKWh: srmAmount * priceReadyToBurn / kWhWood
+                costPerKWh: kWhWood > 0 ? srmAmount * priceReadyToBurn / kWhWood : Infinity
             };
 
             // Option 2: Log wood with processing
@@ -265,7 +265,7 @@
                 rm: rmAmount,
                 kWh: kWhWood,
                 totalCost: rmAmount * priceLogWood + processingCost,
-                costPerKWh: (rmAmount * priceLogWood + processingCost) / kWhWood
+                costPerKWh: kWhWood > 0 ? (rmAmount * priceLogWood + processingCost) / kWhWood : Infinity
             };
 
             // Option 3: Pellets
@@ -275,13 +275,13 @@
                 rm: pelletsAmount,
                 kWh: kWhWood,
                 totalCost: pelletsAmount * pricePellets,
-                costPerKWh: (pelletsAmount * pricePellets) / kWhWood
+                costPerKWh: kWhWood > 0 ? (pelletsAmount * pricePellets) / kWhWood : Infinity
             };
 
             // Find the cheapest option
             const options = [option1, option2, option3];
             const cheapest = options.reduce((min, option) => 
-                option.costPerKWh < min.costPerKWh ? option : min
+                isFinite(option.costPerKWh) && option.costPerKWh < min.costPerKWh ? option : min
             );
 
             // Display results
