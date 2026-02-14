@@ -378,7 +378,7 @@
             <div class="grid">
                 <div class="form-group">
                     <label for="postalCode">Postleitzahl:</label>
-                    <input type="text" id="postalCode" placeholder="z.B. 10115" maxlength="5" pattern="[0-9]{5}">
+                    <input type="text" id="postalCode" placeholder="z.B. 10115" maxlength="5" pattern="[0-9]{5}" inputmode="numeric">
                 </div>
                 <div class="form-group">
                     <label for="searchRadius">Umkreis (km):</label>
@@ -407,7 +407,7 @@
                 <button class="close-button" onclick="closeRequestModal()">&times;</button>
             </div>
             <textarea id="requestText" readonly></textarea>
-            <button class="copy-button" onclick="copyRequestText()">📋 Text kopieren</button>
+            <button class="copy-button" onclick="copyRequestText(event)">📋 Text kopieren</button>
         </div>
     </div>
 
@@ -572,7 +572,7 @@
                     </div>
                     <div class="result-item">
                         <span class="result-label">Äquivalent (RM):</span>
-                        <span class="result-value">${option2.rm.toFixed(2)} RM</span>
+                        <span class="result-value">${rmAmount.toFixed(2)} RM</span>
                     </div>
                     <div class="result-item">
                         <span class="result-label">Heizwert:</span>
@@ -598,10 +598,12 @@
         // Provider search function
         function searchProviders() {
             const postalCode = document.getElementById('postalCode').value;
-            const searchRadius = document.getElementById('searchRadius').value;
+            // Note: searchRadius is available but not currently used in search URLs
+            // as most platforms handle radius filtering on their own sites
+            const TAB_OPEN_DELAY = 500; // milliseconds between opening tabs
 
             // Validate postal code
-            if (!postalCode || postalCode.length !== 5 || !/^\d{5}$/.test(postalCode)) {
+            if (!postalCode || !/^\d{5}$/.test(postalCode)) {
                 alert('Bitte geben Sie eine gültige 5-stellige Postleitzahl ein.');
                 return;
             }
@@ -628,7 +630,7 @@
                     const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(term)}`;
                     window.open(googleUrl, '_blank');
                 }, delay);
-                delay += 500; // 500ms delay between tabs
+                delay += TAB_OPEN_DELAY;
             });
 
             // Open Kleinanzeigen.de searches
@@ -637,7 +639,7 @@
                     const kleinanzeigenUrl = `https://www.kleinanzeigen.de/s-suchanfrage.html?keywords=${encodeURIComponent(search.keyword)}&locationStr=${postalCode}`;
                     window.open(kleinanzeigenUrl, '_blank');
                 }, delay);
-                delay += 500; // 500ms delay between tabs
+                delay += TAB_OPEN_DELAY;
             });
         }
 
@@ -715,18 +717,35 @@ Mit freundlichen Grüßen`;
             modal.style.display = 'none';
         }
 
-        function copyRequestText() {
+        function copyRequestText(event) {
             const requestText = document.getElementById('requestText');
-            requestText.select();
-            document.execCommand('copy');
             
-            // Visual feedback
-            const copyButton = event.target;
-            const originalText = copyButton.textContent;
-            copyButton.textContent = '✓ Kopiert!';
-            setTimeout(() => {
-                copyButton.textContent = originalText;
-            }, 2000);
+            // Helper function for visual feedback
+            function showCopyFeedback() {
+                const copyButton = event.target;
+                const originalText = copyButton.textContent;
+                copyButton.textContent = '✓ Kopiert!';
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                }, 2000);
+            }
+            
+            // Use modern Clipboard API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(requestText.value).then(() => {
+                    showCopyFeedback();
+                }).catch(err => {
+                    // Fallback to older method if modern API fails
+                    requestText.select();
+                    document.execCommand('copy');
+                    showCopyFeedback();
+                });
+            } else {
+                // Fallback for older browsers
+                requestText.select();
+                document.execCommand('copy');
+                showCopyFeedback();
+            }
         }
 
         // Close modal when clicking outside
